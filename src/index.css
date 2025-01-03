@@ -1,0 +1,34 @@
+@import '@react-pdf-viewer/core/lib/styles/index.css';
+@import '@react-pdf-viewer/search/lib/styles/index.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: auto; 
+
+}
+
+.pdf-container {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.react-pdf__Page__textContent {
+  border: none !important;
+}
+.pdf-viewer-container {
+  height: 100%; 
+  overflow-y: auto; 
+  position: relative;
+}
+
+.rpv-core__inner-pages {
+  scroll-behavior: smooth; 
+}
