@@ -79,15 +79,16 @@ const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
       {/* Drag/Drop or Upload Section */}
       <div className="flex items-center justify-between gap-4 p-4">
         <div
-          className={`flex-1 flex items-center gap-4 border-2 border-dashed rounded-lg p-4 ${
+          className={`flex-1 flex items-center justify-center border-2 border-dashed rounded-lg ${
             isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
           } cursor-pointer transition-colors`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          style={{ height: "50px" }} // Reduce height for a compact layout
         >
-          <label className="flex items-center gap-2 cursor-pointer w-full">
-            <FiUpload className="text-blue-500" />
+          <label className="flex items-center gap-2 cursor-pointer">
+            <FiUpload className="text-blue-500 text-lg" />
             <span className="text-sm text-gray-600">
               {isDragging ? "Drop PDF here" : "Drop PDF here or click to upload"}
             </span>
