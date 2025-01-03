@@ -1,12 +1,39 @@
-import React from "react";
-import { Worker, Viewer, Icon } from "@react-pdf-viewer/core";
+import React, { useState } from "react";
+import { Worker, Viewer } from "@react-pdf-viewer/core";
 import { zoomPlugin } from "@react-pdf-viewer/zoom";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/zoom/lib/styles/index.css";
+import { FiUpload, FiDownload, FiSearch } from 'react-icons/fi';
 
 const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const zoomPluginInstance = zoomPlugin();
   const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onload = () => {
+        onFileUpload({ target: { files: [file] } });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert("Please upload a valid PDF file.");
+    }
+  };
 
   const handleDownload = () => {
     if (pdfFile) {
@@ -17,36 +44,98 @@ const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
     }
   };
 
+  const handleSearch = () => {
+    if (searchQuery && searchPluginInstance) {
+      searchPluginInstance.highlight(searchQuery);
+      
+      // Add small delay to ensure highlighting is complete
+      setTimeout(() => {
+        const highlightedElement = document.querySelector(
+          ".rpv-search__highlight.rpv-search__highlight--current"
+        );
+        const pdfContainer = document.querySelector(".pdf-viewer-container");
+        
+        if (highlightedElement && pdfContainer) {
+          const containerRect = pdfContainer.getBoundingClientRect();
+          const elementRect = highlightedElement.getBoundingClientRect();
+          const scrollTop =
+            elementRect.top -
+            containerRect.top +
+            pdfContainer.scrollTop -
+            containerRect.height / 2;
+
+          pdfContainer.scrollTo({
+            top: scrollTop,
+            behavior: "smooth",
+          });
+        }
+      }, 100);
+    }
+  };
+
   return (
     <div className="w-1/2 bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
-      <div className={`flex items-center ${!pdfFile ? 'justify-center' : 'justify-between'} p-4`}>
-        <label className="flex items-center px-3 py-2 bg-white text-blue-500 rounded-lg shadow-lg tracking-wide border border-blue-500 cursor-pointer hover:bg-blue-500 hover:text-white transition duration-300 text-sm">
-          <span>Upload PDF</span>
-          <input
-            type="file"
-            className="hidden"
-            accept="application/pdf"
-            onChange={onFileUpload}
-          />
-        </label>
+      <div className={`flex flex-col gap-4 p-4`}>
+         <div className="flex items-center justify-between">
+          <div 
+            className={`flex-1 mr-4 border-2 border-dashed rounded-lg p-4 ${
+              isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+            } cursor-pointer transition-colors`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <label className="flex items-center justify-center gap-2 cursor-pointer">
+              <FiUpload className="text-blue-500" />
+              <span className="text-sm text-gray-600">
+                {isDragging ? 'Drop PDF here' : 'Drop PDF here or click to upload'}
+              </span>
+              <input
+                type="file"
+                className="hidden"
+                accept="application/pdf"
+                onChange={onFileUpload}
+              />
+            </label>
+          </div>
+        </div>
+
         {pdfFile && (
           <div className="flex items-center gap-2">
-            <ZoomOutButton />
-            <ZoomPopover />
-            <ZoomInButton />
-            <button
-              onClick={handleDownload}
-              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
-            >
-              <Icon>
-                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
-              </Icon>
-              <span>Download</span>
-            </button>
+            <div className="flex-1 flex items-center gap-2">
+            <input
+                type="text"
+                placeholder="Search in PDF..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <button
+                onClick={handleSearch}
+                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                <FiSearch />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <ZoomOutButton />
+              <ZoomPopover />
+              <ZoomInButton />
+              <button
+                onClick={handleDownload}
+                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+              >
+                <FiDownload />
+                <span>Download</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
-      {pdfFile && (
+
+      {pdfFile ? (
         <div className="pdf-viewer-container flex-1 border rounded-lg shadow-inner bg-gray-50 overflow-auto">
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
             <Viewer
@@ -57,10 +146,13 @@ const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
             />
           </Worker>
         </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center text-gray-400">
+          No PDF file selected
+        </div>
       )}
     </div>
   );
 };
 
 export default PDFViewer;
-
