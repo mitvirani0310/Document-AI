@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import { zoomPlugin } from "@react-pdf-viewer/zoom";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/zoom/lib/styles/index.css";
 import { FiUpload, FiDownload, FiSearch, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
-const PDFViewer = ({ 
-  pdfFile, 
-  searchPluginInstance, 
+const PDFViewer = ({
+  pdfFile,
+  searchPluginInstance,
   onFileUpload,
   currentMatchIndex,
   setCurrentMatchIndex,
@@ -21,6 +21,20 @@ const PDFViewer = ({
   const [searchQuery, setSearchQuery] = useState('');
   const zoomPluginInstance = zoomPlugin();
   const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
+
+  useEffect(() => {
+    if (!searchQuery) {
+      setTotalMatches(0);
+      setCurrentMatchIndex(-1);
+    }
+  }, [searchQuery, setTotalMatches, setCurrentMatchIndex]);
+
+  const scrollToMatch = (index) => {
+    const matches = document.querySelectorAll('.rpv-search__highlight');
+    if (matches[index]) {
+      matches[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -58,12 +72,37 @@ const PDFViewer = ({
   const handleSearch = () => {
     if (searchQuery && searchPluginInstance) {
       searchPluginInstance.highlight(searchQuery);
-      setCurrentMatchIndex(0);
+      setCurrentMatchIndex(-1);
       setTotalMatches(0);
+
       setTimeout(() => {
         const matches = document.querySelectorAll('.rpv-search__highlight');
-        setTotalMatches(matches.length);
+        const total = matches.length;
+        setTotalMatches(total);
+        
+        if (total > 0) {
+          setCurrentMatchIndex(0);
+          scrollToMatch(0);
+        }
       }, 100);
+    }
+  };
+
+  const handleLocalNextMatch = () => {
+    if (currentMatchIndex < totalMatches - 1) {
+      const nextIndex = currentMatchIndex + 1;
+      setCurrentMatchIndex(nextIndex);
+      handleNextMatch();
+      scrollToMatch(nextIndex);
+    }
+  };
+
+  const handleLocalPreviousMatch = () => {
+    if (currentMatchIndex > 0) {
+      const prevIndex = currentMatchIndex - 1;
+      setCurrentMatchIndex(prevIndex);
+      handlePreviousMatch();
+      scrollToMatch(prevIndex);
     }
   };
 
@@ -71,7 +110,9 @@ const PDFViewer = ({
     <div className="w-full bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-4 p-4">
         <div
-          className={`flex-1 flex items-center justify-center border-2 border-dashed rounded-lg ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"} cursor-pointer transition-colors`}
+          className={`flex-1 flex items-center justify-center border-2 border-dashed rounded-lg ${
+            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
+          } cursor-pointer transition-colors`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -104,7 +145,6 @@ const PDFViewer = ({
       {isControlsVisible && pdfFile && (
         <div className="flex flex-col gap-2 px-4 pb-4">
           <div className="flex items-center gap-4">
-            {/* Search Box */}
             <input
               type="text"
               placeholder="Search in PDF..."
@@ -114,7 +154,6 @@ const PDFViewer = ({
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
             />
 
-            {/* Search Button */}
             <button
               onClick={handleSearch}
               className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
@@ -122,35 +161,32 @@ const PDFViewer = ({
               <FiSearch />
             </button>
 
-            {/* Previous Match Button */}
             <button
-              onClick={handlePreviousMatch}
-              disabled={currentMatchIndex <= 0 || totalMatches === 0}
+              onClick={handleLocalPreviousMatch}
+              disabled={currentMatchIndex <= 0 || totalMatches <= 1}
               className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiChevronLeft />
             </button>
 
-            {/* Match Info */}
             <span className="text-sm text-gray-600">
-              {totalMatches > 0 ? `Match ${currentMatchIndex + 1} of ${totalMatches}` : 'No matches'}
+              {totalMatches > 0 
+                ? `Match ${currentMatchIndex + 1} of ${totalMatches}` 
+                : 'No matches'}
             </span>
 
-            {/* Next Match Button */}
             <button
-              onClick={handleNextMatch}
-              disabled={currentMatchIndex >= totalMatches - 1 || totalMatches === 0}
+              onClick={handleLocalNextMatch}
+              disabled={currentMatchIndex >= totalMatches - 1 || totalMatches <= 1}
               className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiChevronRight />
             </button>
 
-            {/* Zoom Controls */}
             <ZoomOutButton />
             <ZoomPopover />
             <ZoomInButton />
 
-            {/* Download Button with reduced size */}
             <button
               onClick={handleDownload}
               className="px-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 text-xs"

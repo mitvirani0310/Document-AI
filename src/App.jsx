@@ -49,15 +49,39 @@ const App = () => {
     }
   };
 
+  // const handleKeyValueClick = (value) => {
+  //   setCurrentMatchIndex(0);
+  //   highlight(value);
+  //   setTotalMatches(0); // Reset total matches
+  //   setTimeout(() => {
+  //     const matches = document.querySelectorAll('.rpv-search__highlight');
+  //     setTotalMatches(matches.length);
+  //     scrollToHighlight();
+  //   }, 100);
+  // };
+
   const handleKeyValueClick = (value) => {
-    setCurrentMatchIndex(0);
-    highlight(value);
-    setTotalMatches(0); // Reset total matches
-    setTimeout(() => {
-      const matches = document.querySelectorAll('.rpv-search__highlight');
-      setTotalMatches(matches.length);
-      scrollToHighlight();
-    }, 100);
+    if (searchPluginInstance) {
+      searchPluginInstance.highlight(value);
+      setCurrentMatchIndex(-1);
+      setTotalMatches(0);
+  
+      // Wait for highlights to be rendered
+      setTimeout(() => {
+        const matches = document.querySelectorAll('.rpv-search__highlight');
+        const total = matches.length;
+        setTotalMatches(total);
+        
+        if (total > 0) {
+          setCurrentMatchIndex(0);
+          // Scroll to first match
+          matches[0].scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 100);
+    }
   };
 
   const scrollToHighlight = () => {
