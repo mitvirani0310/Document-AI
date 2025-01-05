@@ -68,12 +68,10 @@ const PDFViewer = ({
   };
 
   return (
-    <div className="w-1/2 bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
+    <div className="w-full bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-4 p-4">
         <div
-          className={`flex-1 flex items-center justify-center border-2 border-dashed rounded-lg ${
-            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
-          } cursor-pointer transition-colors`}
+          className={`flex-1 flex items-center justify-center border-2 border-dashed rounded-lg ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"} cursor-pointer transition-colors`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -106,38 +104,25 @@ const PDFViewer = ({
       {isControlsVisible && pdfFile && (
         <div className="flex flex-col gap-2 px-4 pb-4">
           <div className="flex items-center gap-4">
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search in PDF..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              />
-              <button
-                onClick={handleSearch}
-                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                <FiSearch />
-              </button>
-            </div>
+            {/* Search Box */}
+            <input
+              type="text"
+              placeholder="Search in PDF..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+            />
 
-            <div className="flex items-center gap-2">
-              <ZoomOutButton />
-              <ZoomPopover />
-              <ZoomInButton />
-              <button
-                onClick={handleDownload}
-                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
-              >
-                <FiDownload />
-                <span>Download</span>
-              </button>
-            </div>
-          </div>
+            {/* Search Button */}
+            <button
+              onClick={handleSearch}
+              className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+            >
+              <FiSearch />
+            </button>
 
-          <div className="flex items-center justify-center gap-4 mt-2 p-2 bg-gray-50 rounded-lg">
+            {/* Previous Match Button */}
             <button
               onClick={handlePreviousMatch}
               disabled={currentMatchIndex <= 0 || totalMatches === 0}
@@ -145,15 +130,33 @@ const PDFViewer = ({
             >
               <FiChevronLeft />
             </button>
+
+            {/* Match Info */}
             <span className="text-sm text-gray-600">
               {totalMatches > 0 ? `Match ${currentMatchIndex + 1} of ${totalMatches}` : 'No matches'}
             </span>
+
+            {/* Next Match Button */}
             <button
               onClick={handleNextMatch}
               disabled={currentMatchIndex >= totalMatches - 1 || totalMatches === 0}
               className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiChevronRight />
+            </button>
+
+            {/* Zoom Controls */}
+            <ZoomOutButton />
+            <ZoomPopover />
+            <ZoomInButton />
+
+            {/* Download Button with reduced size */}
+            <button
+              onClick={handleDownload}
+              className="px-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 text-xs"
+            >
+              <FiDownload />
+              <span className="hidden md:inline">Download</span>
             </button>
           </div>
         </div>
