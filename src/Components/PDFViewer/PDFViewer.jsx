@@ -3,11 +3,21 @@ import { Worker, Viewer } from "@react-pdf-viewer/core";
 import { zoomPlugin } from "@react-pdf-viewer/zoom";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/zoom/lib/styles/index.css";
-import { FiUpload, FiDownload, FiSearch, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiUpload, FiDownload, FiSearch, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
-const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
+const PDFViewer = ({ 
+  pdfFile, 
+  searchPluginInstance, 
+  onFileUpload,
+  currentMatchIndex,
+  setCurrentMatchIndex,
+  totalMatches,
+  setTotalMatches,
+  handleNextMatch,
+  handlePreviousMatch
+}) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [isControlsVisible, setIsControlsVisible] = useState(true); // Toggle state for controls
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const zoomPluginInstance = zoomPlugin();
   const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
@@ -48,35 +58,17 @@ const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
   const handleSearch = () => {
     if (searchQuery && searchPluginInstance) {
       searchPluginInstance.highlight(searchQuery);
-
-      // Add small delay to ensure highlighting is complete
+      setCurrentMatchIndex(0);
+      setTotalMatches(0);
       setTimeout(() => {
-        const highlightedElement = document.querySelector(
-          ".rpv-search__highlight.rpv-search__highlight--current"
-        );
-        const pdfContainer = document.querySelector(".pdf-viewer-container");
-
-        if (highlightedElement && pdfContainer) {
-          const containerRect = pdfContainer.getBoundingClientRect();
-          const elementRect = highlightedElement.getBoundingClientRect();
-          const scrollTop =
-            elementRect.top -
-            containerRect.top +
-            pdfContainer.scrollTop -
-            containerRect.height / 2;
-
-          pdfContainer.scrollTo({
-            top: scrollTop,
-            behavior: "smooth",
-          });
-        }
+        const matches = document.querySelectorAll('.rpv-search__highlight');
+        setTotalMatches(matches.length);
       }, 100);
     }
   };
 
   return (
     <div className="w-1/2 bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
-      {/* Drag/Drop or Upload Section */}
       <div className="flex items-center justify-between gap-4 p-4">
         <div
           className={`flex-1 flex items-center justify-center border-2 border-dashed rounded-lg ${
@@ -85,7 +77,7 @@ const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          style={{ height: "50px" }} // Reduce height for a compact layout
+          style={{ height: "50px" }}
         >
           <label className="flex items-center gap-2 cursor-pointer">
             <FiUpload className="text-blue-500 text-lg" />
@@ -101,7 +93,6 @@ const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
           </label>
         </div>
 
-        {/* Toggle Button - Only Visible If PDF Is Uploaded */}
         {pdfFile && (
           <button
             onClick={() => setIsControlsVisible(!isControlsVisible)}
@@ -112,42 +103,62 @@ const PDFViewer = ({ pdfFile, searchPluginInstance, onFileUpload }) => {
         )}
       </div>
 
-      {/* Additional Controls (Search, Zoom, Download) */}
       {isControlsVisible && pdfFile && (
-        <div className="flex items-center gap-4 px-4 pb-4">
-          <div className="flex-1 flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Search in PDF..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <button
-              onClick={handleSearch}
-              className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              <FiSearch />
-            </button>
+        <div className="flex flex-col gap-2 px-4 pb-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search in PDF..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <button
+                onClick={handleSearch}
+                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                <FiSearch />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <ZoomOutButton />
+              <ZoomPopover />
+              <ZoomInButton />
+              <button
+                onClick={handleDownload}
+                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+              >
+                <FiDownload />
+                <span>Download</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <ZoomOutButton />
-            <ZoomPopover />
-            <ZoomInButton />
+          <div className="flex items-center justify-center gap-4 mt-2 p-2 bg-gray-50 rounded-lg">
             <button
-              onClick={handleDownload}
-              className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+              onClick={handlePreviousMatch}
+              disabled={currentMatchIndex <= 0 || totalMatches === 0}
+              className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiDownload />
-              <span>Download</span>
+              <FiChevronLeft />
+            </button>
+            <span className="text-sm text-gray-600">
+              {totalMatches > 0 ? `Match ${currentMatchIndex + 1} of ${totalMatches}` : 'No matches'}
+            </span>
+            <button
+              onClick={handleNextMatch}
+              disabled={currentMatchIndex >= totalMatches - 1 || totalMatches === 0}
+              className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiChevronRight />
             </button>
           </div>
         </div>
       )}
 
-      {/* PDF Viewer Section */}
       {pdfFile ? (
         <div className="pdf-viewer-container flex-1 border rounded-lg shadow-inner bg-gray-50 overflow-auto">
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">

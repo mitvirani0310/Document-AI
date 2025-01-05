@@ -8,6 +8,8 @@ import Split from "react-split";
 
 const App = () => {
   const [pdfFile, setPdfFile] = useState(null);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
+  const [totalMatches, setTotalMatches] = useState(0);
 
   const [keyValueList] = useState([
     { key: "Name", value: "Mit" },
@@ -25,8 +27,14 @@ const App = () => {
     { key: "Contact email", value: "contactus@outamation.com" },
   ]);
   
-  const searchPluginInstance = searchPlugin();
-  const { highlight } = searchPluginInstance;
+  const searchPluginInstance = searchPlugin({
+    onHighlightKeyword: (props) => {
+      setTotalMatches(props.totalMatch);
+      setCurrentMatchIndex(props.currentMatch);
+    },
+  });
+
+  const { highlight, jumpToNextMatch, jumpToPreviousMatch } = searchPluginInstance;
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -42,27 +50,45 @@ const App = () => {
   };
 
   const handleKeyValueClick = (value) => {
+    setCurrentMatchIndex(0);
     highlight(value);
+    setTotalMatches(0); // Reset total matches
     setTimeout(() => {
-      const highlightedElement = document.querySelector(
-        ".rpv-search__highlight.rpv-search__highlight--current"
-      );
-      const pdfContainer = document.querySelector(".pdf-viewer-container");
-      if (highlightedElement && pdfContainer) {
-        const containerRect = pdfContainer.getBoundingClientRect();
-        const elementRect = highlightedElement.getBoundingClientRect();
-        const scrollTop =
-          elementRect.top -
-          containerRect.top +
-          pdfContainer.scrollTop -
-          containerRect.height / 2;
-
-        pdfContainer.scrollTo({
-          top: scrollTop,
-          behavior: "smooth",
-        });
-      }
+      const matches = document.querySelectorAll('.rpv-search__highlight');
+      setTotalMatches(matches.length);
+      scrollToHighlight();
     }, 100);
+  };
+
+  const scrollToHighlight = () => {
+    const highlightedElement = document.querySelector(
+      ".rpv-search__highlight.rpv-search__highlight--current"
+    );
+    const pdfContainer = document.querySelector(".pdf-viewer-container");
+    if (highlightedElement && pdfContainer) {
+      const containerRect = pdfContainer.getBoundingClientRect();
+      const elementRect = highlightedElement.getBoundingClientRect();
+      const scrollTop =
+        elementRect.top -
+        containerRect.top +
+        pdfContainer.scrollTop -
+        containerRect.height / 2;
+
+      pdfContainer.scrollTo({
+        top: scrollTop,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const handleNextMatch = () => {
+    jumpToNextMatch();
+    setTimeout(scrollToHighlight, 100);
+  };
+
+  const handlePreviousMatch = () => {
+    jumpToPreviousMatch();
+    setTimeout(scrollToHighlight, 100);
   };
 
   return (
@@ -76,22 +102,28 @@ const App = () => {
         </p>
       </div>
       <div className="flex gap-6 p-6 flex-1 overflow-hidden">
-      <Split
-        className="flex flex-1"
-        sizes={[50, 50]} // Initial sizes of the panes
-        minSize={[window.innerWidth * 0.5, 200]} // Minimum width of panes
-        gutterSize={8} // Thickness of the resizable divider
-        direction="horizontal" // Resizing direction
-      >
-        <PDFViewer
-          pdfFile={pdfFile}
-          searchPluginInstance={searchPluginInstance}
-          onFileUpload={handleFileUpload}
-        />
-        <KeyValueList
-          keyValueList={keyValueList}
-          handleKeyValueClick={handleKeyValueClick}
-        />
+        <Split
+          className="flex flex-1"
+          sizes={[50, 50]}
+          minSize={[window.innerWidth * 0.5, 200]}
+          gutterSize={8}
+          direction="horizontal"
+        >
+          <PDFViewer
+            pdfFile={pdfFile}
+            searchPluginInstance={searchPluginInstance}
+            onFileUpload={handleFileUpload}
+            currentMatchIndex={currentMatchIndex}
+            setCurrentMatchIndex={setCurrentMatchIndex}
+            totalMatches={totalMatches}
+            setTotalMatches={setTotalMatches}
+            handleNextMatch={jumpToNextMatch}
+            handlePreviousMatch={jumpToPreviousMatch}
+          />
+          <KeyValueList
+            keyValueList={keyValueList}
+            handleKeyValueClick={handleKeyValueClick}
+          />
         </Split>
       </div>
     </div>
