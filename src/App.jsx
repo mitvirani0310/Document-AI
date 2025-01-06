@@ -5,11 +5,22 @@ import "@react-pdf-viewer/search/lib/styles/index.css";
 import KeyValueList from "./Components/KeyValueList/KeyValueList";
 import PDFViewer from "./Components/PDFViewer/PDFViewer";
 import Split from "react-split";
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { FiSun, FiMoon } from 'react-icons/fi';
 
 const App = () => {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+};
+
+const AppContent = () => {
   const [pdfFile, setPdfFile] = useState(null);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
   const [totalMatches, setTotalMatches] = useState(0);
+  const { theme, toggleTheme } = useTheme();
 
   const [keyValueList] = useState([
     { key: "Name", value: "Mit" },
@@ -48,17 +59,6 @@ const App = () => {
       alert("Please upload a valid PDF file.");
     }
   };
-
-  // const handleKeyValueClick = (value) => {
-  //   setCurrentMatchIndex(0);
-  //   highlight(value);
-  //   setTotalMatches(0); // Reset total matches
-  //   setTimeout(() => {
-  //     const matches = document.querySelectorAll('.rpv-search__highlight');
-  //     setTotalMatches(matches.length);
-  //     scrollToHighlight();
-  //   }, 100);
-  // };
 
   const handleKeyValueClick = (value) => {
     if (searchPluginInstance) {
@@ -116,14 +116,20 @@ const App = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
-      <div className="text-center py-3 bg-white shadow-md">
+    <div className={`flex flex-col h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
+      <div className={`text-center py-3 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md flex justify-between items-center px-6`}>
         <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
           Document AI
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} text-sm mt-1`}>
           Extract and analyze document information
         </p>
+        <button
+          onClick={toggleTheme}
+          className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'} transition-colors`}
+        >
+          {theme === 'light' ? <FiMoon /> : <FiSun />}
+        </button>
       </div>
       <div className="flex gap-6 p-6 flex-1 overflow-hidden">
         <Split
@@ -155,3 +161,4 @@ const App = () => {
 };
 
 export default App;
+

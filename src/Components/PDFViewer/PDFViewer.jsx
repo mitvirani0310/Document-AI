@@ -4,6 +4,7 @@ import { zoomPlugin } from "@react-pdf-viewer/zoom";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/zoom/lib/styles/index.css";
 import { FiUpload, FiDownload, FiSearch, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { useTheme } from '../../contexts/ThemeContext';
 
 const PDFViewer = ({
   pdfFile,
@@ -21,6 +22,7 @@ const PDFViewer = ({
   const [searchQuery, setSearchQuery] = useState('');
   const zoomPluginInstance = zoomPlugin();
   const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!searchQuery) {
@@ -107,11 +109,11 @@ const PDFViewer = ({
   };
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
+    <div className={`w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg flex flex-col overflow-hidden`}>
       <div className="flex items-center justify-between gap-4 p-4">
         <div
           className={`flex-1 flex items-center justify-center border-2 border-dashed rounded-lg ${
-            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
+            isDragging ? `border-blue-500 ${theme === 'dark' ? 'bg-blue-900' : 'bg-blue-50'}` : `${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`
           } cursor-pointer transition-colors`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -119,8 +121,8 @@ const PDFViewer = ({
           style={{ height: "50px" }}
         >
           <label className="flex items-center gap-2 cursor-pointer">
-            <FiUpload className="text-blue-500 text-lg" />
-            <span className="text-sm text-gray-600">
+            <FiUpload className={`${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} text-lg`} />
+            <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               {isDragging ? "Drop PDF here" : "Drop PDF here or click to upload"}
             </span>
             <input
@@ -135,7 +137,7 @@ const PDFViewer = ({
         {pdfFile && (
           <button
             onClick={() => setIsControlsVisible(!isControlsVisible)}
-            className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600"
+            className={`p-2 rounded-full ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
           >
             {isControlsVisible ? <FiChevronUp /> : <FiChevronDown />}
           </button>
@@ -150,13 +152,15 @@ const PDFViewer = ({
               placeholder="Search in PDF..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
+                theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'
+              }`}
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
             />
 
             <button
               onClick={handleSearch}
-              className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+              className={`p-2 ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'} rounded-lg text-sm`}
             >
               <FiSearch />
             </button>
@@ -164,12 +168,12 @@ const PDFViewer = ({
             <button
               onClick={handleLocalPreviousMatch}
               disabled={currentMatchIndex <= 0 || totalMatches <= 1}
-              className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <FiChevronLeft />
             </button>
 
-            <span className="text-sm text-gray-600">
+            <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               {totalMatches > 0 
                 ? `Match ${currentMatchIndex + 1} of ${totalMatches}` 
                 : 'No matches'}
@@ -178,7 +182,7 @@ const PDFViewer = ({
             <button
               onClick={handleLocalNextMatch}
               disabled={currentMatchIndex >= totalMatches - 1 || totalMatches <= 1}
-              className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <FiChevronRight />
             </button>
@@ -189,7 +193,7 @@ const PDFViewer = ({
 
             <button
               onClick={handleDownload}
-              className="px-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 text-xs"
+              className={`px-2 py-2 ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'} rounded-lg flex items-center gap-2 text-xs`}
             >
               <FiDownload />
               <span className="hidden md:inline">Download</span>
@@ -199,18 +203,19 @@ const PDFViewer = ({
       )}
 
       {pdfFile ? (
-        <div className="pdf-viewer-container flex-1 border rounded-lg shadow-inner bg-gray-50 overflow-auto">
+        <div className={`pdf-viewer-container flex-1 border rounded-lg shadow-inner ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} overflow-auto`}>
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
             <Viewer
               fileUrl={pdfFile}
               plugins={[searchPluginInstance, zoomPluginInstance]}
               scrollMode="vertical"
               defaultScale={1}
+              theme={theme}
             />
           </Worker>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-400">
+        <div className={`flex-1 flex items-center justify-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
           No PDF file selected
         </div>
       )}
@@ -219,3 +224,4 @@ const PDFViewer = ({
 };
 
 export default PDFViewer;
+
